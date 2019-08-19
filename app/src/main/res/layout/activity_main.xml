@@ -17,5 +17,5 @@
         android:layout_margin="16dp"
         android:onClick="onPushBtnClick"
         android:text="@string/push"
-        android:layout_gravity="bottom|right"/>
+        android:layout_gravity="bottom|center"/>
 </FrameLayout>

@@ -72,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
     public void insert(final WithMillis<Message> message) {
         mList.add(message);
         mAdapter.notifyItemInserted(mList.size() - 1);
-
-        backgroundThreadHandler.obtainMessage(WAT_SENT_TO_BG_THREAD, message).sendToTarget();
+        final WithMillis<Message> messageWithStartTime = new WithMillis<>(message.value, System.currentTimeMillis());
+        backgroundThreadHandler.obtainMessage(WAT_SENT_TO_BG_THREAD, messageWithStartTime).sendToTarget();
     }
 
     @UiThread
@@ -102,10 +102,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean handleMessage(android.os.Message msg) {
             if (msg.what == WAT_SENT_TO_BG_THREAD) {
-                long time = System.currentTimeMillis();
 
-                WithMillis<Message> messageWithMillis = (WithMillis<Message>) msg.obj;
-                Message message = messageWithMillis.value;
+                WithMillis<Message> messageWithStartTime = (WithMillis<Message>) msg.obj;
+                Message message = messageWithStartTime.value;
+                long time = messageWithStartTime.elapsedMillis;
+
 
                 final Message messageNew = message.copy(CipherUtil.encrypt(message.plainText));
                 long elapsedTime = System.currentTimeMillis() - time;
