@@ -1,6 +1,9 @@
 package com.artemchep.basics_multithreading;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.view.View;
 
 import androidx.annotation.UiThread;
@@ -15,12 +18,18 @@ import com.artemchep.basics_multithreading.domain.WithMillis;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
     private List<WithMillis<Message>> mList = new ArrayList<>();
 
     private MessageAdapter mAdapter = new MessageAdapter(mList);
+
+    private HandlerThread backgroundThread = new HandlerThread("bg_thread");
+    private Handler backgroundThreadHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +40,16 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(mAdapter);
 
-        showWelcomeDialog();
+//        showWelcomeDialog();
+
+        backgroundThread.start();
+        backgroundThreadHandler = new Handler(backgroundThread.getLooper(), backgroundThreadCallback);
+    }
+
+    @Override
+    protected void onDestroy() {
+        backgroundThread.quit();
+        super.onDestroy();
     }
 
     private void showWelcomeDialog() {
@@ -54,19 +72,7 @@ public class MainActivity extends AppCompatActivity {
         mList.add(message);
         mAdapter.notifyItemInserted(mList.size() - 1);
 
-        // TODO: Start processing the message (please use CipherUtil#encrypt(...)) here.
-        //       After it has been processed, send it to the #update(...) method.
-
-        // How it should look for the end user? Uncomment if you want to see. Please note that
-        // you should not use poor decor view to send messages to UI thread.
-//        getWindow().getDecorView().postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                final Message messageNew = message.value.copy("sample :)");
-//                final WithMillis<Message> messageNewWithMillis = new WithMillis<>(messageNew, CipherUtil.WORK_MILLIS);
-//                update(messageNewWithMillis);
-//            }
-//        }, CipherUtil.WORK_MILLIS);
+        backgroundThreadHandler.obtainMessage(11, message).sendToTarget();
     }
 
     @UiThread
@@ -82,4 +88,34 @@ public class MainActivity extends AppCompatActivity {
         throw new IllegalStateException();
     }
 
+    private final Handler mainThreadHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(android.os.Message msg) {
+            if (msg.what == 11) {
+                update((WithMillis<Message>) msg.obj);
+            }
+        }
+    };
+
+    private final Handler.Callback backgroundThreadCallback = new Handler.Callback() {
+        @Override
+        public boolean handleMessage(android.os.Message msg) {
+            if (msg.what == 11) {
+                long time = System.currentTimeMillis();
+
+                WithMillis<Message> messageWithMillis = (WithMillis<Message>) msg.obj;
+                Message message = messageWithMillis.value;
+
+                final Message messageNew = message.copy(CipherUtil.encrypt(message.plainText));
+                long elapsedTime = System.currentTimeMillis() - time;
+
+                final WithMillis<Message> messageNewWithMillis = new WithMillis<>(messageNew, elapsedTime);
+
+                mainThreadHandler.obtainMessage(11, messageNewWithMillis).sendToTarget();
+
+                return true;
+            }
+            return false;
+        }
+    };
 }
