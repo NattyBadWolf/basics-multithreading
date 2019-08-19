@@ -18,11 +18,11 @@ import com.artemchep.basics_multithreading.domain.WithMillis;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int WAT_SENT_TO_BG_THREAD = 24;
+    private static final int WAT_RETURN_TO_UI_THREAD = 42;
 
     private List<WithMillis<Message>> mList = new ArrayList<>();
 
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         mList.add(message);
         mAdapter.notifyItemInserted(mList.size() - 1);
 
-        backgroundThreadHandler.obtainMessage(11, message).sendToTarget();
+        backgroundThreadHandler.obtainMessage(WAT_SENT_TO_BG_THREAD, message).sendToTarget();
     }
 
     @UiThread
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private final Handler mainThreadHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(android.os.Message msg) {
-            if (msg.what == 11) {
+            if (msg.what == WAT_RETURN_TO_UI_THREAD) {
                 update((WithMillis<Message>) msg.obj);
             }
         }
@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
     private final Handler.Callback backgroundThreadCallback = new Handler.Callback() {
         @Override
         public boolean handleMessage(android.os.Message msg) {
-            if (msg.what == 11) {
+            if (msg.what == WAT_SENT_TO_BG_THREAD) {
                 long time = System.currentTimeMillis();
 
                 WithMillis<Message> messageWithMillis = (WithMillis<Message>) msg.obj;
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
                 final WithMillis<Message> messageNewWithMillis = new WithMillis<>(messageNew, elapsedTime);
 
-                mainThreadHandler.obtainMessage(11, messageNewWithMillis).sendToTarget();
+                mainThreadHandler.obtainMessage(WAT_RETURN_TO_UI_THREAD, messageNewWithMillis).sendToTarget();
 
                 return true;
             }
