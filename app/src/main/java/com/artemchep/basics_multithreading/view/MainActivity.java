@@ -1,4 +1,4 @@
-package com.artemchep.basics_multithreading;
+package com.artemchep.basics_multithreading.view;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.artemchep.basics_multithreading.R;
 import com.artemchep.basics_multithreading.cipher.CipherUtil;
 import com.artemchep.basics_multithreading.domain.Message;
 import com.artemchep.basics_multithreading.domain.WithMillis;

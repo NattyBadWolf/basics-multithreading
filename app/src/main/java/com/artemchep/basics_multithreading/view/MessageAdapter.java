@@ -1,4 +1,4 @@
-package com.artemchep.basics_multithreading;
+package com.artemchep.basics_multithreading.view;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.artemchep.basics_multithreading.R;
 import com.artemchep.basics_multithreading.domain.Message;
 import com.artemchep.basics_multithreading.domain.WithMillis;
 
